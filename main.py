@@ -19,6 +19,8 @@ intents.members = True
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
 abusive_responses = ["Wanker", "Asshole", "Prick", "Twat"]
+mention_counts = defaultdict(list) # This will hold user IDs and their mention timestamps
+logger = logging.getLogger('discord')  # Get the discord logger
 
 def get_keywords_from_openai(text):
     functions = [
@@ -69,7 +71,6 @@ def get_keywords_from_openai(text):
 
 def fetch_search_results(keywords):
     search_url = f"https://recipethis.com/?s={'+'.join(keywords)}"
-    print(search_url)
     response = requests.get(search_url)
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -90,8 +91,6 @@ async def on_message(message):
 
     # Ignore messages not sent by our server
     if str(message.guild.id) != server_id:
-        print(message.guild.id)
-        print(server_id)
         return
 
     # Ignore messages sent by the bot itself
@@ -105,25 +104,24 @@ async def on_message(message):
     # If the bot is mentioned
     if bot.user in message.mentions:
         # Get the ID of the person who mentioned the bot
-
         user_id = message.author.id
         username = message.author.name
-        print(f'Bot was mentioned by user {username} (ID: {user_id})')
+        logger.info(f'Bot was mentioned by user {username} (ID: {user_id})')
 
-        # # Current time
-        # now = datetime.utcnow()
+        # Current time
+        now = datetime.utcnow()
 
-        # # Add the current time to the user's list of mention timestamps
-        # mention_counts[user_id].append(now)
+        # Add the current time to the user's list of mention timestamps
+        mention_counts[user_id].append(now)
 
-        # # Remove mentions that were more than an hour ago
-        # mention_counts[user_id] = [time for time in mention_counts[user_id] if now - time <= timedelta(hours=1)]
+        # Remove mentions that were more than an hour ago
+        mention_counts[user_id] = [time for time in mention_counts[user_id] if now - time <= timedelta(hours=1)]
 
-        # # If the user has mentioned the bot more than 10 times recently
-        # if len(mention_counts[user_id]) > 10:
-        #     # Send an abusive response
-        #     await message.reply(f"{message.author.mention} {random.choice(abusive_responses)}.")
-        #     return
+        # If the user has mentioned the bot more than 10 times recently
+        if len(mention_counts[user_id]) > 10:
+            # Send an abusive response
+            await message.reply(f"{message.author.mention} {random.choice(abusive_responses)}.")
+            return
 
         question = message.content.split(' ', 1)[1][:500].replace('\r', ' ').replace('\n', ' ')
         # logger.info(f'Question: {question}')
@@ -136,15 +134,12 @@ async def on_message(message):
             async with message.channel.typing():
                 prompt = question.replace(f'<@!{bot.user.id}>', '').strip()
                 keywords = get_keywords_from_openai(prompt)
-                print(keywords)
+                logger.info(keywords)
                 url = fetch_search_results(keywords)
                     # send the response as a reply and mention the person who asked the question
             await message.reply(f'{message.author.mention} {url}')
         except Exception as e:
-            print(f'Error generating response: {e}')
-            await message.reply(f"{message.author.mention} Aaaaand... we've not beeped.", mention_author=True)
-
-
-
+            logger.info(f'Error generating response: {e}')
+            await message.reply(f"{message.author.mention} Aaaaand... we've _not_ beeped.", mention_author=True)
 
 bot.run(TOKEN)
