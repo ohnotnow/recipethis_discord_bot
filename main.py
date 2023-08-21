@@ -8,6 +8,9 @@ from discord import File
 from discord.ext import commands, tasks
 import openai
 from bs4 import BeautifulSoup
+from collections import defaultdict
+from datetime import datetime, timedelta, timezone
+from enum import Enum
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 openai_model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
