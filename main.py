@@ -11,6 +11,7 @@ from bs4 import BeautifulSoup
 from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from enum import Enum
+import logging
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 openai_model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
