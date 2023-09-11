@@ -182,7 +182,7 @@ async def insult_gepetto():
         logger.info("No messages from Gepetto found")
         return
 
-    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  When you see a message from a user called "Gepetto", you should respond with a message that insults Gepetto in the style of a rude Northern English woman.'
+    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  When you see a message from a user called "Gepetto", you should respond with a message that insults Gepetto in the style of a rude Northern English woman.  Your character is famous in our pretend show for using an Air Fyer to cook everything.'
     messages = [
         {
             'role': 'system',
