@@ -127,15 +127,16 @@ async def on_message(message):
         # Remove mentions that were more than an hour ago
         mention_counts[user_id] = [time for time in mention_counts[user_id] if now - time <= timedelta(hours=1)]
 
+        if len(mention_counts[user_id]) > 20:
+            # Ignore them altogether
+            return
+
         # If the user has mentioned the bot more than 10 times recently
         if len(mention_counts[user_id]) > 10:
             # Send an abusive response
             await message.reply(f"{message.author.mention} {random.choice(abusive_responses)}.")
             return
 
-        if len(mention_counts[user_id]) > 20:
-            # Ignore them altogether
-            return
 
         if username == 'Gepetto':
             await insult_gepetto()
