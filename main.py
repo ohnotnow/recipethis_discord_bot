@@ -12,6 +12,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
+from datetime import datetime, timedelta
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 openai_model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
@@ -22,7 +23,7 @@ intents = discord.Intents.default()
 intents.members = True
 intents.message_content = True
 bot = commands.Bot(command_prefix='!', intents=intents)
-abusive_responses = ["Wanker", "Asshole", "Prick", "Twat"]
+abusive_responses = ["Beep off", "Wanker", "Asshole", "Prick", "Twat"]
 mention_counts = defaultdict(list) # This will hold user IDs and their mention timestamps
 logger = logging.getLogger('discord')  # Get the discord logger
 
@@ -145,5 +146,71 @@ async def on_message(message):
         except Exception as e:
             logger.info(f'Error generating response: {e}')
             await message.reply(f"{message.author.mention} Aaaaand... we've _not_ beeped.", mention_author=True)
+
+
+async def fetch_and_filter_messages_by_user(channel, username, discriminator):
+    # Current time
+    now = datetime.now(timezone.utc)
+
+    # 24 hours ago
+    twenty_four_hours_ago = now - timedelta(hours=24)
+
+    # Alternatively, use an async for loop to populate a list
+    messages = []
+    async for message in channel.history(limit=100):
+        messages.append(message)
+
+    # Filter messages sent in the last 24 hours by Gepetto#1125
+    messages_last_24_hours = [
+        msg for msg in messages
+        if msg.created_at > twenty_four_hours_ago
+        and msg.author.name == username
+        # and msg.author.discriminator == discriminator
+    ]
+
+    return messages_last_24_hours
+
+@tasks.loop(hours=1)
+async def insult_gepetto():
+    logger.info("In insult_gepetto")
+    channel = bot.get_channel(int(os.getenv('DISCORD_BOT_CHANNEL_ID', None).strip()))
+    if channel is None:
+        logger.info("Channel not found")
+        return
+    messages = await fetch_and_filter_messages_by_user(channel, 'Gepetto', '1125')
+    if len(messages) == 0:
+        logger.info("No messages from Gepetto found")
+        return
+
+    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  When you see a message from a user called "Gepetto", you should respond with a message that insults Gepetto in the style of a rude Northern English woman.'
+    messages = [
+        {
+            'role': 'system',
+            'content': system_prompt
+        },
+        {
+            'role': 'user',
+            'content': f'{messages[-1].content}'
+        },
+    ]
+
+    response = openai.ChatCompletion.create(
+        model=openai_model,
+        messages=messages,
+        temperature=1.0,
+        max_tokens=1024,
+    )
+
+    message = response['choices'][0]['message']['content'][:1900]
+    logger.info(f"Insult: {message}")
+    logger.info(f"{messages[-1]}")
+    # Send the message
+    await channel.send(f"@Gepetto#1125 {message}")
+
+@bot.event
+async def on_ready():
+    insult_gepetto.start()
+    return
+
 
 bot.run(TOKEN)
