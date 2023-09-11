@@ -13,6 +13,7 @@ from datetime import datetime, timedelta, timezone
 from enum import Enum
 import logging
 from datetime import datetime, timedelta
+import random
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
 openai_model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
@@ -103,7 +104,7 @@ async def on_message(message):
         return
 
     # ignore messages from other bots
-    if message.author.bot:
+    if message.author.bot and random.random() < 0.9:
         return
 
     # Ignore messages that don't mention anyone at all
@@ -186,7 +187,7 @@ async def insult_gepetto():
         logger.info("No messages from Gepetto found")
         return
 
-    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  When you see a message from a user called "Gepetto" (a female character in our pretend show), you should respond with a message that insults Gepetto in the style of a rude Northern English woman.  Your character is famous in our pretend show for loving her Air Fyer.'
+    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  When you see a message from a user called "Gepetto" (a female character in our pretend show), you should respond with a message that insults Gepetto in the style of a rude Northern English woman who *loves* Air Fryers.'
     messages = [
         {
             'role': 'system',
