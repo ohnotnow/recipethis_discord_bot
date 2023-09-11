@@ -104,7 +104,7 @@ async def on_message(message):
         return
 
     # ignore messages from other bots
-    if message.author.bot and random.random() < 0.9:
+    if message.author.bot and random.random() < 0.5:
         return
 
     # Ignore messages that don't mention anyone at all
