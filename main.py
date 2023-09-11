@@ -177,12 +177,12 @@ async def insult_gepetto():
     if channel is None:
         logger.info("Channel not found")
         return
-    messages = await fetch_and_filter_messages_by_user(channel, 'Gepetto', '1125')
-    if len(messages) == 0:
+    gepetto_messages = await fetch_and_filter_messages_by_user(channel, 'Gepetto', '1125')
+    if len(gepetto_messages) == 0:
         logger.info("No messages from Gepetto found")
         return
 
-    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  When you see a message from a user called "Gepetto", you should respond with a message that insults Gepetto in the style of a rude Northern English woman.  Your character is famous in our pretend show for using an Air Fyer to cook everything.'
+    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  When you see a message from a user called "Gepetto" (a female character in our pretend show), you should respond with a message that insults Gepetto in the style of a rude Northern English woman.  Your character is famous in our pretend show for loving her Air Fyer.'
     messages = [
         {
             'role': 'system',
@@ -190,7 +190,7 @@ async def insult_gepetto():
         },
         {
             'role': 'user',
-            'content': f'{messages[-1].content}'
+            'content': f'{gepetto_messages[-1].content}'
         },
     ]
 
@@ -205,7 +205,7 @@ async def insult_gepetto():
     logger.info(f"Insult: {message}")
     logger.info(f"{messages[-1]}")
     # Send the message
-    await channel.send(f"@Gepetto#1125 {message}")
+    await gepetto_messages[-1].reply(f"{message}")
 
 @bot.event
 async def on_ready():
