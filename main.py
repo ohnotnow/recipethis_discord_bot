@@ -102,6 +102,10 @@ async def on_message(message):
     if message.author == bot.user:
         return
 
+    # ignore messages from other bots
+    if message.author.bot:
+        return
+
     # Ignore messages that don't mention anyone at all
     if len(message.mentions) == 0:
         return
