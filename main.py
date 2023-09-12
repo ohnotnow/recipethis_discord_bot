@@ -196,6 +196,11 @@ async def insult_gepetto():
         logger.info("No messages from Gepetto found")
         return
 
+    if random.random() < 0.5:
+        gepetto_message = "I am the most amazing bot ever.  And Liz Truss was the best Prime Minister we ever had."
+    else:
+        gepetto_message = gepetto_messages[-1].content
+
     system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  Your character is a Northern woman who is in love with her Air Fryer and doesnt understand why everyone else doesnt use one. When you see a message from a user called "Gepetto" (a female character in our pretend show), you should respond with a very short comment that insults Gepetto in the style of a rude Northern English woman.'
     messages = [
         {
@@ -204,7 +209,7 @@ async def insult_gepetto():
         },
         {
             'role': 'user',
-            'content': f'{gepetto_messages[-1].content}'
+            'content': f'{gepetto_message}'
         },
     ]
 
