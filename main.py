@@ -27,67 +27,15 @@ bot = commands.Bot(command_prefix='!', intents=intents)
 abusive_responses = ["Beep off", "Wanker", "Asshole", "Prick", "Twat"]
 mention_counts = defaultdict(list) # This will hold user IDs and their mention timestamps
 logger = logging.getLogger('discord')  # Get the discord logger
+API_KEY=os.getenv('CLOUDFLARE_API_KEY')
 
-def get_keywords_from_openai(text):
-    functions = [
-        {
-            "name": "get_search_keywords",
-            "description": "this function takes in a user message and returns an array of keywords to search for to get the best search results",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "keywords": {
-                        "type": "array",
-                        "description": "the extracted list of good keywords to search for",
-                        "items": {
-                            "type": "string",
-                        }
-                    }
-                },
-                "required": ["keywords"],
+API_BASE_URL = os.getenv('CLOUDFLARE_API_BASE')
+headers = {"Authorization": f"Bearer {API_KEY}"}
 
-            },
-        }
-    ]
-    function_call = {"name": "get_search_keywords"}
-    messages = [
-        {
-            "role": "system",
-            "content": "You are a helpful AI assistant who specialises in turning user messages into search keywords."
-        },
-        {
-            "role": "user",
-            "content": text
-        }
-    ]
-    response = openai.ChatCompletion.create(
-        model=openai_model,
-        messages=messages,
-        function_call=function_call,
-        functions=functions,
-        max_tokens=100
-    )
-
-    if response.choices[0].message['function_call']:
-        arguments_json = response.choices[0].message['function_call']['arguments']
-        decoded_results = json.loads(arguments_json)
-        return " ".join(decoded_results['keywords']).split()
-    else:
-        return response.choices[0].message['content'].split()
-
-def fetch_search_results(keywords):
-    search_url = f"https://recipethis.com/?s={'+'.join(keywords)}"
-    response = requests.get(search_url)
-    soup = BeautifulSoup(response.text, 'html.parser')
-
-    # Fetch all anchor tags inside an article tag
-    anchor_tags = soup.select('article > a')[:4]
-
-    # Extract href attributes (URLs) from these anchor tags
-    urls = [a['href'] for a in anchor_tags]
-
-    return urls[0]
-    return random.choice(urls)
+def get_cloudflare_response(model, inputs):
+    input = { "messages": inputs }
+    response = requests.post(f"{API_BASE_URL}{model}", headers=headers, json=input)
+    return response.json()
 
 @bot.event
 async def on_message(message):
@@ -143,7 +91,7 @@ async def on_message(message):
             return
 
         question = message.content.split(' ', 1)[1][:500].replace('\r', ' ').replace('\n', ' ')
-        # logger.info(f'Question: {question}')
+        logger.info(f'Question: {question}')
         if not any(char.isalpha() for char in question):
             await message.channel.send(f'{message.author.mention} {random.choice(abusive_responses)}.')
             return
@@ -152,11 +100,13 @@ async def on_message(message):
             url = ''
             async with message.channel.typing():
                 prompt = question.replace(f'<@!{bot.user.id}>', '').strip()
-                keywords = get_keywords_from_openai(prompt)
-                logger.info(keywords)
-                url = fetch_search_results(keywords)
-                    # send the response as a reply and mention the person who asked the question
-            await message.reply(f'{message.author.mention} {url}')
+                inputs = [
+                    { "role": "system", "content": "You are a friendly assistant who is role playing a Northern England working-class woman that helps users in a discord server. The server is limited to adults only, so you are free to use adult langauge." },
+                    { "role": "user", "content": prompt}
+                ];
+                output = get_cloudflare_response("@cf/meta/llama-2-7b-chat-int8", inputs)
+                response = output['result']['response'][:1900]
+            await message.reply(f'{message.author.mention} {response}')
         except Exception as e:
             logger.info(f'Error generating response: {e}')
             await message.reply(f"{message.author.mention} Aaaaand... we've _not_ beeped.", mention_author=True)
@@ -186,6 +136,7 @@ async def fetch_and_filter_messages_by_user(channel, username, discriminator):
 
 @tasks.loop(hours=1)
 async def insult_gepetto():
+    pass
     logger.info("In insult_gepetto")
     channel = bot.get_channel(int(os.getenv('DISCORD_BOT_CHANNEL_ID', None).strip()))
     if channel is None:
@@ -228,7 +179,7 @@ async def insult_gepetto():
 
 @bot.event
 async def on_ready():
-    insult_gepetto.start()
+    # insult_gepetto.start()
     return
 
 
