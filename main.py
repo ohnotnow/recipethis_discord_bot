@@ -135,7 +135,7 @@ async def fetch_and_filter_messages_by_user(channel, username, discriminator):
 
     return messages_last_24_hours
 
-@tasks.loop(time=time(hour=2, minutes=15, tzinfo=pytz.timezone('Europe/London')))
+@tasks.loop(time=time(hour=2, minute=15, tzinfo=pytz.timezone('Europe/London')))
 async def insult_gepetto():
     logger.info("In insult_gepetto")
     channel = bot.get_channel(int(os.getenv('DISCORD_BOT_CHANNEL_ID', None).strip()))
