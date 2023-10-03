@@ -9,7 +9,8 @@ from discord.ext import commands, tasks
 import openai
 from bs4 import BeautifulSoup
 from collections import defaultdict
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, timezone, time
+import pytz
 from enum import Enum
 import logging
 from datetime import datetime, timedelta
@@ -87,7 +88,7 @@ async def on_message(message):
 
 
         if username == 'Gepetto':
-            await insult_gepetto()
+            # await insult_gepetto()
             return
 
         question = message.content.split(' ', 1)[1][:500].replace('\r', ' ').replace('\n', ' ')
@@ -134,9 +135,8 @@ async def fetch_and_filter_messages_by_user(channel, username, discriminator):
 
     return messages_last_24_hours
 
-@tasks.loop(hours=1)
+@tasks.loop(time=time(hour=2, minutes=15, tzinfo=pytz.timezone('Europe/London')))
 async def insult_gepetto():
-    pass
     logger.info("In insult_gepetto")
     channel = bot.get_channel(int(os.getenv('DISCORD_BOT_CHANNEL_ID', None).strip()))
     if channel is None:
@@ -147,39 +147,23 @@ async def insult_gepetto():
         logger.info("No messages from Gepetto found")
         return
 
-    if random.random() < 0.5:
-        gepetto_message = "I am the most amazing bot ever.  And Liz Truss was the best Prime Minister we ever had."
-    else:
-        gepetto_message = gepetto_messages[0].content
+    gepetto_message = gepetto_messages[0].content
 
-    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  Your character is a Northern woman who is in love with her Air Fryer and doesnt understand why everyone else doesnt use one. When you see a message from a user called "Gepetto" (a female character in our pretend show), you should respond with a very short comment that insults Gepetto in the style of a rude Northern English woman.'
-    messages = [
-        {
-            'role': 'system',
-            'content': system_prompt
-        },
-        {
-            'role': 'user',
-            'content': f'{gepetto_message}'
-        },
-    ]
+    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  Your character is a Northern working-class woman who believes that the user "Gepetto" (another woman) has been having an affair with your true love - "Nel".  You are very drunk and angry and want to insult her - use emoji rather than word like "laughs", "wink" etc.'
+    inputs = [
+        { "role": "system", "content": system_prompt },
+        { "role": "user", "content": gepetto_message}
+    ];
+    output = get_cloudflare_response("@cf/meta/llama-2-7b-chat-int8", inputs)
+    response = output['result']['response'][:1900]
 
-    response = openai.ChatCompletion.create(
-        model=openai_model,
-        messages=messages,
-        temperature=1.0,
-        max_tokens=1024,
-    )
-
-    message = response['choices'][0]['message']['content'][:1900]
-    logger.info(f"Insult: {message}")
-    logger.info(f"{messages[-1]}")
+    logger.info(f"Insult: {response}")
     # Send the message
-    await gepetto_messages[-1].reply(f"{message}")
+    await gepetto_messages[-1].reply(f"{response}")
 
 @bot.event
 async def on_ready():
-    # insult_gepetto.start()
+    insult_gepetto.start()
     return
 
 
