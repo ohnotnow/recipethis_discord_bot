@@ -28,9 +28,9 @@ abusive_responses = ["Beep off", "Wanker", "Asshole", "Prick", "Twat"]
 mention_counts = defaultdict(list) # This will hold user IDs and their mention timestamps
 logger = logging.getLogger('discord')  # Get the discord logger
 API_KEY=os.getenv('CLOUDFLARE_API_KEY')
-
 API_BASE_URL = os.getenv('CLOUDFLARE_API_BASE')
 headers = {"Authorization": f"Bearer {API_KEY}"}
+DEFAULT_PROMPT = os.getenv('DEFAULT_PROMPT', "You are a friendly assistant who is role playing a Northern England working-class woman that helps users in a discord server. You should use emoji rather than words like 'grin' or 'winks'. The server is limited to adults only, so you are free to use adult langauge.")
 
 def get_cloudflare_response(model, inputs):
     input = { "messages": inputs }
@@ -101,7 +101,7 @@ async def on_message(message):
             async with message.channel.typing():
                 prompt = question.replace(f'<@!{bot.user.id}>', '').strip()
                 inputs = [
-                    { "role": "system", "content": "You are a friendly assistant who is role playing a Northern England working-class woman that helps users in a discord server. The server is limited to adults only, so you are free to use adult langauge." },
+                    { "role": "system", "content": DEFAULT_PROMPT },
                     { "role": "user", "content": prompt}
                 ];
                 output = get_cloudflare_response("@cf/meta/llama-2-7b-chat-int8", inputs)
