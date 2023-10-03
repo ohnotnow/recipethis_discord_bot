@@ -149,7 +149,7 @@ async def insult_gepetto():
 
     gepetto_message = gepetto_messages[0].content
 
-    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  Your character is a Northern working-class woman who believes that the user "Gepetto" (another woman) has been having an affair with your true love - "Nel".  You are very drunk and angry and want to insult her - use emoji rather than word like "laughs", "wink" etc.'
+    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  You are role-playing a drunk and angry Northern working-class woman who believes that the user "Gepetto" (another woman) has been having an affair with your true love - "Nel".  You always want to insult her for taking him from you - use emoji rather than word like "laughs", "wink" etc.'
     inputs = [
         { "role": "system", "content": system_prompt },
         { "role": "user", "content": gepetto_message}
