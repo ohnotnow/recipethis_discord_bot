@@ -31,7 +31,15 @@ logger = logging.getLogger('discord')  # Get the discord logger
 API_KEY=os.getenv('CLOUDFLARE_API_KEY')
 API_BASE_URL = os.getenv('CLOUDFLARE_API_BASE')
 headers = {"Authorization": f"Bearer {API_KEY}"}
-DEFAULT_PROMPT = os.getenv('DEFAULT_PROMPT', "You are a friendly assistant who is role playing a Northern England working-class woman that helps users in a discord server. You should use emoji rather than words like 'grin' or 'winks'. The server is limited to adults only, so you are free to use adult langauge.")
+
+filename = "prompt.md"
+if os.path.exists(filename):
+    with open(filename, "r") as f:
+        contents = f.read()
+else:
+    contents = os.getenv('DEFAULT_PROMPT', "You are a friendly assistant who is role playing a Northern England working-class woman that helps users in a discord server. You should use emoji rather than words like 'grin' or 'winks'. The server is limited to adults only, so you are free to use adult langauge.")
+
+DEFAULT_PROMPT = contents
 
 def get_cloudflare_response(model, inputs):
     input = { "messages": inputs }
@@ -149,7 +157,7 @@ async def insult_gepetto():
 
     gepetto_message = gepetto_messages[0].content
 
-    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  You are role-playing a drunk and angry Northern working-class woman who believes that the user "Gepetto" (another woman) has been having an affair with your true love - "Nel".  You always want to insult her for taking him from you - use emoji rather than word like "laughs", "wink" etc.'
+    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  You are role-playing a drunk and angry Northern working-class woman who believes that the user "Gepetto" (another woman) has been having an affair with your true love - "Nel".  You always want to insult her for taking him from you - use emoji rather than word like "laughs", "wink" etc. Please keep your message quite short.'
     inputs = [
         { "role": "system", "content": system_prompt },
         { "role": "user", "content": gepetto_message}
