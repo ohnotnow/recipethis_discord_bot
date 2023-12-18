@@ -150,7 +150,7 @@ async def insult_gepetto():
     if channel is None:
         logger.info("Channel not found")
         return
-    gepetto_messages = await fetch_and_filter_messages_by_user(channel, 'Gepetto', '1125')
+    gepetto_messages = await fetch_and_filter_messages_by_user(channel, 'Minxie', '4460')
     if len(gepetto_messages) == 0:
         logger.info("No messages from Gepetto found")
         return

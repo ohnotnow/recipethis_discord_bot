@@ -1,4 +1,4 @@
-discord.py==2.3.0
+discord.py
 openai==0.27.8
 beautifulsoup4
 pytz
