@@ -19,7 +19,7 @@ import random
 openai.api_key = os.getenv('OPENAI_API_KEY')
 openai_model = os.getenv('OPENAI_MODEL', 'gpt-3.5-turbo')
 server_id = os.getenv("DISCORD_SERVER_ID", "not_set")
-TOKEN = os.getenv('DISCORD_BOT_TOKEN')
+TOKEN = os.getenv('SERVALAN_BOT_TOKEN')
 # Create instance of bot
 intents = discord.Intents.default()
 # intents.members = True

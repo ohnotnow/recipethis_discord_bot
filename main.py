@@ -95,7 +95,7 @@ async def on_message(message):
             return
 
 
-        if username == 'Gepetto':
+        if username == 'Minxie':
             # await insult_gepetto()
             return
 
@@ -144,6 +144,7 @@ async def fetch_and_filter_messages_by_user(channel, username, discriminator):
     return messages_last_24_hours
 
 @tasks.loop(time=time(hour=2, minute=15, tzinfo=pytz.timezone('Europe/London')))
+#@tasks.loop(minutes=10)
 async def insult_gepetto():
     logger.info("In insult_gepetto")
     channel = bot.get_channel(int(os.getenv('DISCORD_BOT_CHANNEL_ID', None).strip()))
@@ -157,13 +158,26 @@ async def insult_gepetto():
 
     gepetto_message = gepetto_messages[0].content
 
-    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  You are role-playing a drunk and angry Northern working-class woman who believes that the user "Gepetto" (another woman) has been having an affair with your true love - "Nel".  You always want to insult her for taking him from you - use emoji rather than word like "laughs", "wink" etc. Please keep your message quite short.'
+    inputs = [
+        { "role": "system", "content": "You are an experienced British Soap Opera script-writer.  You will be asked by the user to come up with ideas based on their plot, character or general scripting problems."},
+        { "role": "user", "content": "I am writing a script for a soap opera set in the North of England.  I have a character who is a working-class stay-at-home mother who loves air-frying food.  She needs to have a dramatic fall-out with a character called 'Minxie' but I can't think of a reason.  Could you give me a single idea?  It should fit in with the themes of British soap operas - relationship problems with her husband 'Nel', or problems with her air fryer, or just life in general.  But she needs to feel that 'Minxie' is the cause of the problem.  She is possibly a bit drunk due to being so stressed and angry about it.  Please just reply with the short reason - not a scripted scene."}
+    ];
+    output = get_cloudflare_response("@cf/meta/llama-2-7b-chat-int8", inputs)
+    response = output['result']['response'][:1900]
+
+    system_prompt = f'We are roleplaying a Northern English Soap Opera in a Discord server.  You are role-playing a drunk and angry Northern working-class woman who has a strong dislike for the character called "Minxie". You always want to insult her.  Use emoji rather than word like "laughs", "wink" etc. Please keep your message quite short. You will be given a specific theme to be angry about by the user which you should use to create your reply which will be the start of an argument with Minxie.'
+    gepetto_message = f"I need you to come up with an insulting message to say to the character 'Minxie'.  Please only reply with the actual message - no need for any other text. NEVER include anything but the insult in your reply. Any other text will make it look strange so NEVER reply with things like 'Sure! Here's an insulting message'. The reason for the insult is as follows ```{response}```"
     inputs = [
         { "role": "system", "content": system_prompt },
         { "role": "user", "content": gepetto_message}
     ];
+    #output = get_cloudflare_response("@cf/meta/llama-2-7b-chat-int8", inputs)
+    logger.info(f"Getting insult for reason :: {response}")
     output = get_cloudflare_response("@cf/meta/llama-2-7b-chat-int8", inputs)
+    #output = get_cloudflare_response("@cf/mistral/mistral-7b-instruct-v0.1", inputs)
+    logger.info(f"Response :: {output}")
     response = output['result']['response'][:1900]
+    response = "\n".join(response.split("\n")[1:])
 
     logger.info(f"Insult: {response}")
     # Send the message
